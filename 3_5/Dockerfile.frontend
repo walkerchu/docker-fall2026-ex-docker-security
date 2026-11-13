@@ -1,0 +1,45 @@
+# DevOps with Docker, Fall 2026
+# offer by The University of Helsinki
+# chapter 4 Using a non-root user
+# url: https://courses.mooc.fi/org/uh-cs/courses/devops-with-docker-fall-2026/chapter-4/using-a-non-root-user
+# Exercise 3.5. Optimized project
+# created at Nov 09, 2026 00:48 HKT
+
+FROM ubuntu
+
+# Install system dependencies (Cached forever unless this block changes)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ca-certificates gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add Node repository and install Node.js (Cached)
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy application source code
+COPY code/example-frontend .
+RUN npm install
+
+# manually configure API path (see README.md of exercise 1.12)
+ENV REACT_APP_BACKEND_URL=http://localhost:8080
+
+RUN <<EOF
+npm run build
+npm install -g serve
+EOF
+
+# create a new user and
+# change owner of current dir to the new user
+RUN <<EOF
+useradd -m frontend-appuser
+chown frontend-appuser .
+EOF
+
+# change the user
+USER frontend-appuser
+
+CMD [ "serve", "-s", "-l", "5001", "build" ]
+

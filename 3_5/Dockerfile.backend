@@ -1,0 +1,35 @@
+# DevOps with Docker, Fall 2026
+# offer by The University of Helsinki
+# chapter 4 Using a non-root user
+# url: https://courses.mooc.fi/org/uh-cs/courses/devops-with-docker-fall-2026/chapter-4/using-a-non-root-user
+# Exercise 3.5. Optimized project
+# created at Nov 09, 2026 00:48 HKT
+
+
+FROM golang:1.27
+
+WORKDIR /app
+
+# Copy application source code
+COPY code/example-backend .
+RUN go mod download
+
+RUN go build -o server .
+
+RUN go test ./...
+
+ENV REQUEST_ORIGIN=http://localhost:5001
+
+EXPOSE 8080
+
+# create a new user and
+# change owner of current dir to the new user
+RUN <<EOF
+useradd -m backend-appuser
+chown backend-appuser .
+EOF
+
+# change the user
+USER backend-appuser
+
+CMD ["./server"]
