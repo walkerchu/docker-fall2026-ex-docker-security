@@ -1,0 +1,33 @@
+# DevOps with Docker, Fall 2026
+# offer by The University of Helsinki
+# ch 4 Optimizing the image size
+# Exercise 3.7. Project with preinstalled environments
+# created at Nov 14, 2026 14:45 HKT
+
+FROM node:16-alpine
+
+WORKDIR /app
+
+COPY code/example-frontend .
+
+ENV REACT_APP_BACKEND_URL=http://localhost:8080
+
+RUN <<EOF
+npm install
+npm run build
+npm install -g serve
+
+rm -rf src
+
+addgroup -S appgroup
+adduser -S frontend-appuser -G appgroup
+
+chown -R frontend-appuser:appgroup /app
+
+EOF
+
+# change the user
+USER frontend-appuser
+
+CMD [ "serve", "-s", "-l", "5001", "build" ]
+

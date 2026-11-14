@@ -13,14 +13,6 @@ COPY code/example-frontend .
 
 ENV REACT_APP_BACKEND_URL=http://localhost:8080
 
-# Install system dependencies (Cached forever unless this block changes)
-
-# Add Node repository and install Node.js (Cached)
-
-
-# Copy application source code
-
-# manually configure API path (see README.md of exercise 1.12)
 
 RUN <<EOF
 apt-get update
@@ -46,4 +38,3 @@ EOF
 USER frontend-appuser
 
 CMD [ "serve", "-s", "-l", "5001", "build" ]
-
