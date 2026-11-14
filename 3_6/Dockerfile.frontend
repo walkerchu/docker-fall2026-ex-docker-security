@@ -1,9 +1,9 @@
 # DevOps with Docker, Fall 2026
 # offer by The University of Helsinki
-# chapter 4 Using a non-root user
-# url: https://courses.mooc.fi/org/uh-cs/courses/devops-with-docker-fall-2026/chapter-4/using-a-non-root-user
-# Exercise 3.5. Optimized project
-# created at Nov 09, 2026 00:48 HKT
+# chapter 4 Optimizing the image size
+# url: https://courses.mooc.fi/org/uh-cs/courses/devops-with-docker-fall-2026/chapter-4/optimizing-the-image-size
+# Exercise 3.6. Optimized project images
+# created at Nov 14, 2026 09:05 HKT
 
 FROM ubuntu
 
