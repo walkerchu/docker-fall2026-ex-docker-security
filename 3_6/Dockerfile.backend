@@ -1,0 +1,35 @@
+# DevOps with Docker, Fall 2026
+# offer by The University of Helsinki
+# chapter 4 Optimizing the image size
+# url: https://courses.mooc.fi/org/uh-cs/courses/devops-with-docker-fall-2026/chapter-4/optimizing-the-image-size
+# Exercise 3.6. Optimized project images
+# created at Nov 14, 2026 09:05 HKT
+
+
+FROM golang:1.27
+
+WORKDIR /app
+
+# Copy application source code
+COPY code/example-backend .
+
+ENV REQUEST_ORIGIN=http://localhost:5001
+
+EXPOSE 8080
+
+# glue all RUN commands together to reduce layers
+RUN <<EOF
+go mod download
+go build -o server .
+go test ./...
+go clean -cache
+go clean -modcache
+useradd -m backend-appuser
+chown backend-appuser .
+rm -rf /var/lib/apt/lists/*
+EOF
+
+# change the user
+USER backend-appuser
+
+CMD ["./server"]
