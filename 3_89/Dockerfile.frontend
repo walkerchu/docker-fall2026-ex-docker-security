@@ -1,0 +1,52 @@
+# DevOps with Docker, Fall 2026
+# offer by The University of Helsinki
+# ch 4 Optimizing the image size
+# Exercise 3.8. Multi-stage frontend
+# created at Nov 14, 2026 19:01 HKT
+
+# ------------ Stage 1 ------------
+
+FROM node:16-alpine AS build
+
+WORKDIR /app
+
+COPY code/example-frontend .
+
+ENV REACT_APP_BACKEND_URL=http://localhost:8080
+
+RUN <<EOF
+npm install
+npm run build
+EOF
+
+# ------------ Stage 2 ------------
+
+FROM nginxinc/nginx-unprivileged:alpine AS runtime
+
+WORKDIR /app
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+# 1. Temporarily switch to root
+USER root
+
+# 2. Create the custom group and user 'frontend-appuser'
+RUN addgroup -g 1001 -S frontend-appgroup \
+    && adduser -u 1001 -S frontend-appuser -G frontend-appgroup
+
+# 3. Transfer ownership of Nginx directories and PID file to frontend-appuser
+RUN chown -R frontend-appuser:frontend-appgroup /var/cache/nginx \
+    && chown -R frontend-appuser:frontend-appgroup /var/log/nginx \
+    && chown -R frontend-appuser:frontend-appgroup /etc/nginx/conf.d \
+    && touch /tmp/nginx.pid \
+    && chown -R frontend-appuser:frontend-appgroup /tmp/nginx.pid
+
+# 4. Copy static files and configuration with the new user's ownership
+COPY --from=build --chown=frontend-appuser:frontend-appgroup /app/build /usr/share/nginx/html
+
+
+# 5. Switch to non-root user
+USER frontend-appuser
+
+EXPOSE 8080
+CMD ["nginx", "-g", "daemon off;"]
