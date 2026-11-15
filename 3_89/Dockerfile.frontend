@@ -27,26 +27,31 @@ WORKDIR /app
 
 COPY --from=build /app/build /usr/share/nginx/html
 
-# 1. Temporarily switch to root
+# Temporarily switch to root
 USER root
 
-# 2. Create the custom group and user 'frontend-appuser'
+# Create the custom group and user 'frontend-appuser'
 RUN addgroup -g 1001 -S frontend-appgroup \
     && adduser -u 1001 -S frontend-appuser -G frontend-appgroup
 
-# 3. Transfer ownership of Nginx directories and PID file to frontend-appuser
+# Change Nginx's listening port from 8080 to 5001 (for exercise 3.9)
+RUN sed -i 's/8080/5001/g' /etc/nginx/conf.d/default.conf
+
+# Transfer ownership of Nginx directories and PID file to frontend-appuser
 RUN chown -R frontend-appuser:frontend-appgroup /var/cache/nginx \
     && chown -R frontend-appuser:frontend-appgroup /var/log/nginx \
     && chown -R frontend-appuser:frontend-appgroup /etc/nginx/conf.d \
     && touch /tmp/nginx.pid \
     && chown -R frontend-appuser:frontend-appgroup /tmp/nginx.pid
 
-# 4. Copy static files and configuration with the new user's ownership
+# Copy static files and configuration with the new user's ownership
 COPY --from=build --chown=frontend-appuser:frontend-appgroup /app/build /usr/share/nginx/html
 
 
-# 5. Switch to non-root user
+# Switch to non-root user
 USER frontend-appuser
 
-EXPOSE 8080
+
+# exercise 3.9: change port to 5001
+EXPOSE 5001
 CMD ["nginx", "-g", "daemon off;"]

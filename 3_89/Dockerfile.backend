@@ -1,0 +1,44 @@
+# DevOps with Docker, Fall 2026
+# offer by The University of Helsinki
+# chapter 4 Optimizing the image size
+# url: https://courses.mooc.fi/org/uh-cs/courses/devops-with-docker-fall-2026/chapter-4/optimizing-the-image-size
+# Exercise 3.9. Multi-stage backend
+# created at Nov 15, 2026 09:16 HKT
+
+# -------------- Stage 1 --------------
+FROM golang:1.27-alpine AS builder
+
+WORKDIR /app
+
+# Copy application source code
+COPY code/example-backend .
+
+ENV CGO_ENABLED=0
+
+# glue all RUN commands together to reduce layers
+RUN <<EOF
+go mod download
+go build -o server .
+go test ./...
+echo "backend-appuser:x:10001:10001::/nonexistent:/sbin/nologin" > /etc/passwd.minimal
+EOF
+
+# -------------- Stage 2 --------------
+
+FROM scratch AS runtime
+
+WORKDIR /app
+
+ENV REQUEST_ORIGIN=http://localhost:5001
+
+# Copy user and group definitions
+COPY --from=builder /etc/passwd.minimal /etc/passwd
+
+COPY --from=builder --chown=10001:10001 /app/server .
+
+EXPOSE 8080
+
+# change the user
+USER backend-appuser
+
+CMD ["./server"]
